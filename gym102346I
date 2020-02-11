@@ -1,0 +1,70 @@
+离线之后顺序加点floyd
+```cpp
+//#pragma comment(linker, "/STACK:1024000000,1024000000")
+#include<bits/stdc++.h>
+using namespace std;
+function<void(void)> ____ = [](){ios_base::sync_with_stdio(false); cin.tie(0); cout.tie(0);};
+const int MAXN = 1e5+7;
+const int INF = 0x3f3f3f3f;
+struct Query{
+    int u,v,k,id;
+    Query(){}
+    Query(int u, int v, int k, int id){
+        this->u = u;
+        this->v = v;
+        this->k = k;
+        this->id = id;
+    }
+}Q[2][MAXN];
+int n,m,qs,res[MAXN],temp[MAXN],initG[444][444],q[2],G[444][444];
+void solve(){
+    vector<int> tmp(n),nodes(n);
+    for(int i = 0; i < n; i++){
+        tmp[i]=temp[i+1];
+        nodes[i]=i+1;
+    }
+    sort(tmp.begin(),tmp.end());
+    tmp.erase(unique(tmp.begin(),tmp.end()),tmp.end());
+    function<bool(int,int)> cmp[2] = {
+            [](int x, int y){ return temp[x] < temp[y]; },
+            [](int x, int y){ return temp[x] > temp[y]; }
+    };
+    for(int op = 0; op <= 1; op++){
+        for(int i = 1; i <= n; i++) for(int j = 1; j <= n; j++) G[i][j] = initG[i][j];
+        sort(nodes.begin(),nodes.end(),cmp[op]);
+        if(!op) sort(tmp.begin(),tmp.end(),less<int>());
+        else sort(tmp.begin(),tmp.end(),greater<int>());
+        sort(Q[op]+1,Q[op]+1+q[op],[](const Query &x, const Query &y){ return x.k < y.k; });
+        for(int i = 1, cur = 0; i <= q[op]; i++){
+            while(cur<n){
+                if((!op&&temp[nodes[cur]]>tmp[Q[op][i].k-1])||(op&&temp[nodes[cur]]<tmp[Q[op][i].k-1])) break;
+                int node = nodes[cur++];
+                for(int u = 1; u <= n; u++) for(int v = 1; v <= n; v++)
+                    G[u][v] = G[v][u] = min(G[u][v],G[u][node]+G[node][v]);
+            }    
+            int u = Q[op][i].u, v = Q[op][i].v, ID = Q[op][i].id;
+            res[ID] = G[u][v]==INF?-1:G[u][v];
+        }   
+    }
+}
+int main(){
+    scanf("%d %d",&n,&m);
+    for(int i = 1; i <= n; i++) scanf("%d",&temp[i]);
+    memset(initG,INF,sizeof(initG));
+    for(int i = 1; i <= n; i++) initG[i][i] = 0;
+    for(int i = 1; i <= m; i++){
+        int u, v, d;
+        scanf("%d %d %d",&u,&v,&d);
+        initG[u][v] = initG[v][u] = d;
+    }
+    scanf("%d",&qs);
+    for(int i = 1; i <= qs; i++){
+        int u, v, k, op;
+        scanf("%d %d %d %d",&u,&v,&k,&op);
+        Q[op][++q[op]] = Query(u,v,k,i);
+    }
+    solve();
+    for(int i = 1; i <= qs; i++) printf("%d\n",res[i]);
+    return 0;
+}
+```
